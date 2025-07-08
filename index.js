@@ -1,23 +1,16 @@
 import 'dotenv/config'
 import connection from "./src/db/index.js";
+
+import app from './app.js';
 connection()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+.then(()=>{
+  app.listen(process.env.PORT,()=>{
+    console.log(`This server is run at the port of ${process.env.PORT}`)
+  })
+})
+.catch((error)=>{
+console.log("Mongodb connection failed :",error)
+})
 
 
 
