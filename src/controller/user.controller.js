@@ -5,7 +5,7 @@ import { User } from "../models/user.models.js";
 import uploadOnCloudinary from "../utils/coudinary.js";
 const RegisterUser = asynchandler(async (req,res)=>{
 const {username,email,fullname,password} = req.body
-console.log("email",email)
+// console.log("email",email)
 // get info of the user like name fullname from frontend
 // validation- check all filed no any field is empty
 // if user enter registerd mail then show error
@@ -31,7 +31,7 @@ if (!email.toLowerCase().endsWith("@gmail.com")) {
   throw new ApiErrors(400,"Email should be ends with @gmail.com,@yahoo.com")
   
 }
-const userexsit = User.findOne(
+const userexsit = await User.findOne(
   {
     $or:[{username},{email}]
   }
@@ -41,14 +41,17 @@ if(userexsit){
 }
 
 const avatarlocal = req.files?.avatar[0]?.path
-const coverlocal = req.files?.avatar[0]?.path
-
+const coverlocal = req.files?.coverimage[0]?.path
+console.log(avatarlocal)
+console.log(coverlocal)
+// console.log(avatarlocal)
 if (!avatarlocal) {
   throw new ApiErrors("400","avatar image is required")
 }
 const avatar= await uploadOnCloudinary(avatarlocal)
+// console.log(avatar)
 const coverhandle = await uploadOnCloudinary(coverlocal)
-
+// console.log(coverhandle)
 if(!avatar){
   throw new ApiErrors(404,"avatar image is not correct ")
 }
@@ -62,14 +65,14 @@ username: username.toLowerCase(),
 
 })
 const createduser = await User.findById(mainuser._id).select(
-  "-passwprd -refreshtoken"
+  "-password -refreshtoken"
 )
 
 if (!createduser){
 throw new ApiErrors(404,"something error to register a user")
 }
 return res.status(200).json(
-  new ApiRsponse(200,createduser,"user is regitered succesfully")
+  new ApiRsponse(200,createduser,"user is registred succesfully")
   
 )
 })
