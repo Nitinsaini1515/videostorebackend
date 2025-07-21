@@ -4,20 +4,23 @@ import ApiRsponse from "../utils/apiresponse.js";
 import { User } from "../models/user.models.js";
 import uploadOnCloudinary from "../utils/coudinary.js";
 
-
-const generateAccessaAndRefreshToken = async(userId)=>{
+const generateAccessaAndRefreshToken = async (userId) => {
   try {
-    const user = await User.findById(userId)
-    const accesstoken = user.generateAccessToken()
-    const refreshtoken = user.generateRefreshToken()
-    user.refreshtoken = refreshtoken
-    await user.save({validateBeforeSave:false})
-    return {accesstoken,refreshtoken}
+    const user = await User.findById(userId);
+    const accesstoken = user.generateAccessToken();
+    const refreshtoken = user.generateRefreshToken();
+    // console.log(accesstoken)
+    // console.log(refreshtoken)
+    user.refreshtoken = refreshtoken;
+    await user.save({ validateBeforeSave: false });
+    return { accesstoken, refreshtoken };
   } catch (error) {
-
-    throw new ApiErrors(500,"Something went wrong while generating the access and refresh token")
+    throw new ApiErrors(
+      500,
+      "Something went wrong while generating the access and refresh token"
+    );
   }
-}
+};
 export const RegisterUser = asynchandler(async (req, res) => {
   const { username, email, fullname, password } = req.body;
   // console.log("email",email)
@@ -86,7 +89,6 @@ export const RegisterUser = asynchandler(async (req, res) => {
     .json(new ApiRsponse(200, createduser, "user is registred succesfully"));
 });
 
-
 export const LoginUser = asynchandler(async (req, res) => {
   // what we have to work
   // get data from user then
@@ -94,7 +96,7 @@ export const LoginUser = asynchandler(async (req, res) => {
   // match the password and email
   // if match login done give then access token and refresh token
   // if not show error
-  const { email, password, username } = req.body;
+  const {username,email, password } = req.body;
 
   if (!(email || username)) {
     throw new ApiErrors(300, "The username or email is required");
@@ -111,6 +113,49 @@ export const LoginUser = asynchandler(async (req, res) => {
     throw new ApiErrors(401, "the pass you entered is not correct");
   }
 
-  const {accesstoken,refreshtoken} = await generateAccessaAndRefreshToken(user._id)
-
+  const { accesstoken, refreshtoken } = await generateAccessaAndRefreshToken(
+    user._id
+  );
+  const loggedinuser = await User.findById(user._id).select(
+    "-password"
+  );
+  const options = {
+    httpOnly: true,
+    Secure: true,
+  };
+  return res
+    .status(200)
+    .cookie("accesstoken", accesstoken, options)
+    .cookie("refreshtoken", refreshtoken, options)
+    .json(
+      new ApiRsponse(
+        200,
+        {
+          user: loggedinuser,
+          accesstoken,
+          refreshtoken,
+        },
+        "User logged in successfully"
+      )
+    );
 });
+export const LogoutUser = asynchandler(async (req,res)=>{
+User.findByIdAndUpdate(
+ await req.user._id,
+  {
+    $unset:{
+      refreshtoken : 1
+    }
+  },{
+    new:true
+  }
+
+)
+  const options = {
+    httpOnly: true,
+    Secure: true,
+  };
+  return res.status(200).clearCookie("accesstoken",options)
+  .clearCookie("refreshtoken",options)
+  .json(new ApiRsponse(200,{},"User logged out"))
+})
