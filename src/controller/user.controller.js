@@ -90,6 +90,18 @@ export const RegisterUser = asynchandler(async (req, res) => {
     .json(new ApiRsponse(200, createduser, "user is registred succesfully"));
 });
 
+
+
+// first we get data from the body using req.body in destructured way
+// then check using the .some ki koi field empty to nhi
+// check user exsusted or not using findOne if exsist through error 
+// if not then using req.files.avatar[0].path use krke avatar or coverimage lo
+// dono ko error handle kro
+// then ek user create kro database me like User.create se
+// abb select ka use krke jo save use data ausme se password remove krdo aur refreshtoken
+// then return response
+
+
 export const LoginUser = asynchandler(async (req, res) => {
   // what we have to work
   // get data from user then
