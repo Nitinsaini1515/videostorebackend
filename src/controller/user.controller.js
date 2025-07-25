@@ -6,7 +6,7 @@ import uploadOnCloudinary from "../utils/coudinary.js";
 import jwt from "jsonwebtoken";
 // first we get data from the body using req.body in destructured way
 // then check using the .some ki koi field empty to nhi
-// check user exsusted or not using findOne if exsist through error 
+// check user exsusted or not using findOne if exsist through error
 // if not then using req.files.avatar[0].path use krke avatar or coverimage lo
 // dono ko error handle kro
 // then ek user create kro database me like User.create se
@@ -176,126 +176,210 @@ export const RefreshAccessToken = asynchandler(async (req, res) => {
   if (!incommingrefreshtoken) {
     throw new ApiErrors(401, "Unauthorized request");
   }
- try {
-   const decodedtoken = jwt.verify(
-     incommingrefreshtoken,
-     process.env.REFRESH_TOKEN_SECRET
-   );
-   // if(!decodedtoken){
-   //   throw new erro
-   // }
-   const user = await User.findById(decodedtoken?._id);
-   if (!usertoken) {
-     throw new ApiErrors(401, "Cannot get the usertoken");
-   }
-   if (incommingrefreshtoken !== user?.refreshtoken) {
-     throw new ApiErrors(401, "Refresh token is expired to use");
-   }
- 
-   const options = {
-     httpOnly: true,
-     Secure: true,
-   };
-   const { accesstoken, newrefreshtoken } = await generateAccessaAndRefreshToken(
-     user._id
-   );
-   return res
-     .status(200)
-     .cookie("accesstoken", accesstoken, options)
-     .cookie("refreshtoken", newrefreshtoken, options)
-     .json(
-       new ApiRsponse(200,{accesstoken,refreshtoken:newrefreshtoken},"Access token refresheed successfully")
-     );
- } catch (error) {
-  throw new ApiErrors(401,error?.message||"Invalid response")
- }
+  try {
+    const decodedtoken = jwt.verify(
+      incommingrefreshtoken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    // if(!decodedtoken){
+    //   throw new erro
+    // }
+    const user = await User.findById(decodedtoken?._id);
+    if (!usertoken) {
+      throw new ApiErrors(401, "Cannot get the usertoken");
+    }
+    if (incommingrefreshtoken !== user?.refreshtoken) {
+      throw new ApiErrors(401, "Refresh token is expired to use");
+    }
+
+    const options = {
+      httpOnly: true,
+      Secure: true,
+    };
+    const { accesstoken, newrefreshtoken } =
+      await generateAccessaAndRefreshToken(user._id);
+    return res
+      .status(200)
+      .cookie("accesstoken", accesstoken, options)
+      .cookie("refreshtoken", newrefreshtoken, options)
+      .json(
+        new ApiRsponse(
+          200,
+          { accesstoken, refreshtoken: newrefreshtoken },
+          "Access token refresheed successfully"
+        )
+      );
+  } catch (error) {
+    throw new ApiErrors(401, error?.message || "Invalid response");
+  }
 });
 
-export const PasswordChange = asynchandler(async (req,res)=>{
-const {oldpassword,newpassword,confirmpassword} = req.body
+export const PasswordChange = asynchandler(async (req, res) => {
+  const { oldpassword, newpassword, confirmpassword } = req.body;
 
-if(!(newpassword == confirmpassword)){
-  throw new ApiErrors (401,"Your new and confirm password didn't match"
-  )
-}
-if([oldpassword,newpassword,confirmpassword].some((fields)=>fields.trim()=="")){
-  throw new ApiErrors(401,"No any password field should not be empty")
-}
-const user = await User.findById(req.user?._id)
+  if (!(newpassword == confirmpassword)) {
+    throw new ApiErrors(401, "Your new and confirm password didn't match");
+  }
+  if (
+    [oldpassword, newpassword, confirmpassword].some(
+      (fields) => fields.trim() == ""
+    )
+  ) {
+    throw new ApiErrors(401, "No any password field should not be empty");
+  }
+  const user = await User.findById(req.user?._id);
 
-const ispasswordcorrect = await user.isPasswordCorrect(oldpassword)
-if(!ispasswordcorrect){
-  throw new ApiErrors(401,"Enter an correct password")
-  
-}
-user.password = password
-await user.save({validateBeforeSave:false})
-return res.status(200).json(200,{},"password change successfully")
-})
+  const ispasswordcorrect = await user.isPasswordCorrect(oldpassword);
+  if (!ispasswordcorrect) {
+    throw new ApiErrors(401, "Enter an correct password");
+  }
+  user.password = password;
+  await user.save({ validateBeforeSave: false });
+  return res.status(200).json(200, {}, "password change successfully");
+});
 
-export const GetCurrentUser = asynchandler(async(req,res)=>{
-  return res.status(200).json(200,req.user,"Current user fetched")
-})
-export const AvatarChange = asynchandler(async(req,res)=>{
+export const GetCurrentUser = asynchandler(async (req, res) => {
+  return res.status(200).json(200, req.user, "Current user fetched");
+});
+export const AvatarChange = asynchandler(async (req, res) => {
   // const {newavatar} = req.body;
   //yaha condition laga sakte hai ki avatar png jpg kis format me hona chayea
-//  const checkUser =  await User.findById(user._id)
+  //  const checkUser =  await User.findById(user._id)
   // const updating = await checkUser.findByIdAndUpdate()
-//  const 
-// user se file li multer ke through then locally  save ki then ausko cloudinary pe dala and waha se url iya and database me dal diya
-const avatarlocalpaath = req.files?.path
- if(!avatarlocalpaath){
-  throw new ApiErrors("The avatar file is missing")
-}
-const avatar = await uploadOnCloudinary(avatarlocalpaath)
-if(!avatar.url){
-  throw new ApiErrors (401,"uploadoncloudinary fails")
-}
-await User.findByIdAndUpdate(req.user._id,{
-  $set:{
-    avatar:avatar.url
-  },
-},{
-new :true
-}).select("-password")
-
-return res.status(200).json(200,{},"avatar changed successfully")
-
-})
-
-export const UpdateCoverimage = asynchandler(async (req,res)=>{
-  const localcoverimage = req.file?.path
-  if(!localcoverimage){
-    throw new ApiErrors(300,"There is an error in localcoverimage")
+  //  const
+  // user se file li multer ke through then locally  save ki then ausko cloudinary pe dala and waha se url iya and database me dal diya
+  const avatarlocalpaath = req.files?.path;
+  if (!avatarlocalpaath) {
+    throw new ApiErrors("The avatar file is missing");
   }
-  const coverimage = await uploadOnCloudinary(localcoverimage)
-  if(!coverimage.url){
-    throw new ApiErrors(402,"failed to upload")
+  const avatar = await uploadOnCloudinary(avatarlocalpaath);
+  if (!avatar.url) {
+    throw new ApiErrors(401, "uploadoncloudinary fails");
   }
- const coverimageupload =  await User.findByIdAndUpdate(req.user._id,{
-$set:{
-  coverimage:coverimage.url
-}
- },{
-  new:true
- }).select("-password")
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
 
- if(!coverimageupload){
-  throw new ApiErrors(401,"cover image cannot be setted")
- }
- return res.status(200).json(200,{},"Cover image changed successfully")
-})
-export const UsernameChange = asynchandler( async(req,res)=>{
-  const {fullname,username} = req.body
-  if(fullname =="" && username==""){
-    throw new ApiErrors(401,"All fields are required")
+  return res.status(200).json(200, {}, "avatar changed successfully");
+});
+
+export const UpdateCoverimage = asynchandler(async (req, res) => {
+  const localcoverimage = req.file?.path;
+  if (!localcoverimage) {
+    throw new ApiErrors(300, "There is an error in localcoverimage");
   }
-const user = await User.findByIdAndUpdate(req.user._id,{
-  $set:{
-username:username
+  const coverimage = await uploadOnCloudinary(localcoverimage);
+  if (!coverimage.url) {
+    throw new ApiErrors(402, "failed to upload");
   }
-},{
-  new:true
-}).select("-password")  
-return res.status(200).json(new ApiRsponse(200,user,"username changed successfully"))
-})
+  const coverimageupload = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        coverimage: coverimage.url,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+
+  if (!coverimageupload) {
+    throw new ApiErrors(401, "cover image cannot be setted");
+  }
+  return res.status(200).json(200, {}, "Cover image changed successfully");
+});
+export const UsernameChange = asynchandler(async (req, res) => {
+  const { fullname, username } = req.body;
+  if (fullname == "" && username == "") {
+    throw new ApiErrors(401, "All fields are required");
+  }
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        username: username,
+      },
+    },
+    {
+      new: true,
+    }
+  ).select("-password");
+  return res
+    .status(200)
+    .json(new ApiRsponse(200, user, "username changed successfully"));
+});
+
+export const getUserChannelProfile = asynchandler(async (req, res) => {
+  const { username } = req.params;
+  if (!username?.trim()) {
+    throw new ApiErrors(401, "no user exsist");
+  }
+  const channel = await User.aggregate([
+    {
+      $match: {
+        username: username?.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "channel",
+        as: "subscribers",
+      },
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribeto",
+      },
+    },
+    {
+      $addFields: {
+        subscribercount: {
+          $size: "$subscribers",
+        },
+        channelsubscribedtocount: {
+          $size: "subscribeto",
+        },
+        issubscribed: {
+          $cond: {
+            if: {
+              $in: [req.user?._id, "$subscribers.subscriber"],
+            },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project:{
+        fullname :1,
+        username:1,
+        subscribercount:1,
+        channelsubscribedtocount:1,
+        issubscribed:1,
+        avatar:1,
+        coverimage:1,
+        email:1,
+      }
+    },
+  ]);
+  if(!channel?.length){
+throw new ApiErrors(401,"No channel exsist")
+  }
+  // console.log(channel)
+  return res.status(200).json(new ApiRsponse(200,channel[0],"Channel fetched"))
+});
+// for subscriber we count document means channels
+// man lo agar aapke pass 100 documents hai aur kisi condition ke bad hamne kaha ki aisko 50 kardo to next stage ke liye wo 50 document hi wo orignal data set hai
