@@ -39,4 +39,4 @@ const videosSchema = mongoose.Schema(
 );
 videosSchema.plugin(mongooseaggregate)
 
-export const Videos = mongoose.model("Videos", videosSchema);
+export const Video = mongoose.model("Video", videosSchema);

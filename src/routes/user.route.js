@@ -39,7 +39,6 @@ router
   .route("cover-image")
   .patch(verifyJwt, upload.single("coverimage"), UpdateCoverimage);
 router.route("/name-change").post(verifyJwt, UsernameChange);
-// router.route("/change-profile").patch(verifyJwt,upload.single())
 router.route("/c/:username").get(verifyJwt, getUserChannelProfile);
 router.route("history").get(verifyJwt, WatchHistory);
 export default router;
