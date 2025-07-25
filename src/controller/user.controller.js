@@ -4,6 +4,7 @@ import ApiRsponse from "../utils/apiresponse.js";
 import { User } from "../models/user.models.js";
 import uploadOnCloudinary from "../utils/coudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 // first we get data from the body using req.body in destructured way
 // then check using the .some ki koi field empty to nhi
 // check user exsusted or not using findOne if exsist through error
@@ -363,23 +364,70 @@ export const getUserChannelProfile = asynchandler(async (req, res) => {
       },
     },
     {
-      $project:{
-        fullname :1,
-        username:1,
-        subscribercount:1,
-        channelsubscribedtocount:1,
-        issubscribed:1,
-        avatar:1,
-        coverimage:1,
-        email:1,
-      }
+      $project: {
+        fullname: 1,
+        username: 1,
+        subscribercount: 1,
+        channelsubscribedtocount: 1,
+        issubscribed: 1,
+        avatar: 1,
+        coverimage: 1,
+        email: 1,
+      },
     },
   ]);
-  if(!channel?.length){
-throw new ApiErrors(401,"No channel exsist")
+  if (!channel?.length) {
+    throw new ApiErrors(401, "No channel exsist");
   }
   // console.log(channel)
-  return res.status(200).json(new ApiRsponse(200,channel[0],"Channel fetched"))
+  return res
+    .status(200)
+    .json(new ApiRsponse(200, channel[0], "Channel fetched"));
 });
+
 // for subscriber we count document means channels
 // man lo agar aapke pass 100 documents hai aur kisi condition ke bad hamne kaha ki aisko 50 kardo to next stage ke liye wo 50 document hi wo orignal data set hai
+export const WatchHistory = asynchandler(async (req, res) => {
+  const user = User.aggregate([
+    {
+      $match: {
+        id: new mongoose.Types.ObjectId(req.user._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        localField: "watchhistory",
+        foreignField: "_id",
+        as: "watchhistory",
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as:"owner",
+              pipeline:[
+                {
+                  $project:{
+                    fullname :1,
+                    username:1,
+                    avatar:1
+                  }
+                }
+              ]
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields:{
+        owner:{
+          $first:"$owner"
+        }
+      }
+    }
+  ]);
+  return res.status(200).json(new ApiRsponse (200,user[0].watchhistory,"watch history getched"))
+});
