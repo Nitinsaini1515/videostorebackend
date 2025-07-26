@@ -17,6 +17,7 @@ app.use(cookieParser());
 
 app.use("/api/v1/users",router)
 app.use("/api/v1/tweet",router)
+app.use("/api/v1/comment",router)
 
 export default app
    

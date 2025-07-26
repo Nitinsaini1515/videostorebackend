@@ -11,7 +11,7 @@ ref:"Video"
  },
  owner:{
 type:Schema.Types.ObjectId,
-ref:"user"
+ref:"User"
  }
   
 },{

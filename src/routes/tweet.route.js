@@ -7,3 +7,4 @@ router.route("/create-Tweet").post(verifyJWT,createtweet)
 router.route("/gettweet/:id").get(gettweet)
 router.route("/updatetweet/:id").put(verifyJWT,updatetweet)
 router.route("/delete-Tweet/:id").delete(verifyJWT,deletetweet)
+export default router
