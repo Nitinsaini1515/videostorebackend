@@ -48,16 +48,84 @@ export const GetPlaylistById = asynchandler(async(req,res)=>{
 })
 
 export const AddVideoIntoPlaylist= asynchandler(async(req,res)=>{
+const {PlaylistId,VideoId} = req.params
+const playlsit = await Playlist.findById(PlaylistId)
+
+if(!playlsit){
+  throw new ApiErrors(402,"No playlist exsit")
+}
+const video = await Video.findById(VideoId)
+if(!video){
+  throw new ApiErrors(402,"No video exist exsit")
+}
+// checking already exsist in playlist
+
+const alreadyExsist = await playlist.videos.some((vid)=>vid.toString()=== VideoId)
+if(alreadyExsist){
+  return res.status(200).json(new ApiResponse (200,playlist,"video is already part of playlist"))
+
+}
+ if (!playlist.videos.includes(videoId)){
+playlist.videos.push(VideoId)
+await playlist.save()}
+return res.status(200).json(new ApiResponse(200,playlist,"video is added to playlist"))
+
 
 })
 
 export const RemoveVideoFromPlaylist = asynchandler(async(req,res)=>{
 
+  const {playlistId,VideoId} = req.params
+
+  const playlist = await Playlist.findById(playlistId)
+  if(!playlist){
+     throw new ApiErrors(403,"This playlist does not exist")
+  }
+  const video = await Playlist.findById(VideoId)
+
+  if(!video){
+    throw new ApiErrors(403,"This video does not exist in playist")
+  }
+
+    const exists = playlist.videos.some(
+    (vid) => vid.toString() === videoId
+  );
+  if (!exists) {
+    throw new ApiErrors(403, "This video is not in the playlist");
+  }
+
+playlist.videos.pull(VideoId)
+await playlist.save()
+return res.status(200).json(new ApiResponse(200,playlist,"video is removed from playlist"))
+
 })
 export const UpdatePlaylist= asynchandler(async(req,res)=>{
+  const {playlistId} = req.params
+const name = req.body
+const description = req.body
 
+if(!name||!description){
+  throw new ApiErrors(403,"All fields are not filled")
+}
+const playlist = await Playlist.findById(playlistId)
+if(!playlist){
+ throw new ApiErrors(403,"No playlist exsist with this id")
+
+}
+playlist.name = name||playlist.name
+playlist.description = description|| playlist.description
+await playlist.save()
+
+return res.status(200).json(new ApiResponse(200,playlist,"playlist is updated"))
 })
-export const DeletePlaylist= asynchandler(async(req,res)=>{
 
+export const DeletePlaylist= asynchandler(async(req,res)=>{
+const {playlistId} = req.params
+const playist = await Playlist.findByIdAndDelete(playlistId)
+if(!playist){
+   throw new ApiErrors(403,"playlist already does not exist ")
+
+}
+return res.status(200).json(new ApiResponse(200,{},"playlist is deleted"))
 })
 
