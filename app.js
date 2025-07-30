@@ -8,6 +8,7 @@ import likesrouter from "./src/routes/like.route.js";
 import playlistrouter from "./src/routes/playlist.route.js"
 import commentsrouter from "./src/routes/comment.route.js"
 import videorouter from "./src/routes/videos.route.js"
+import dashboardrouter from "./src/routes/dashboard.routes.js"
 app.use(cors({
 origin :process.env.CORS_ORIGIN,
 credentials:true
@@ -24,6 +25,7 @@ app.use("/api/v1/users",userrouter)
 app.use("/api/v1/tweet",tweetsrouter)
 app.use("/api/v1/videos",videorouter)
 app.use("/api/v1/likes",likesrouter)
+app.use("/api/v1/dashboard",dashboardrouter)
 app.use("/api/v1/playlist",playlistrouter)
 app.use("/api/v1/comment",commentsrouter)
 
